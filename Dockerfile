@@ -84,6 +84,10 @@ COPY ./070_create_webapi_schema_postgresql.sql /docker-entrypoint-initdb.d/070_c
 # # 150 - delete batch initialization tables
 # COPY ./150_delete_batch_initialization_tables.sql /docker-entrypoint-initdb.d/150_delete_batch_initialization_tables.sql
 
+# 200-my cdm
+
+COPY ./200_mycdm.sql /docker-entrypoint-initdb.d/200_mycdm.sql
+
 RUN ["sed", "-i", "s/exec \"$@\"/echo \"skipping...\"/", "/usr/local/bin/docker-entrypoint.sh"]
 
 # Pseudo branching logic - we run 2 stages, 1 for default password auth, the other for secrets auth
