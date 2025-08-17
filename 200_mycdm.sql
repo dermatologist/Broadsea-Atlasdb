@@ -1,6 +1,3 @@
-create schema my_cdm;
-create schema my_cdm_results;
-
 set search_path = my_cdm_results;
 
 CREATE TABLE achilles_analysis
@@ -145,12 +142,31 @@ ALTER TABLE achilles_result_concept_count
 
 set search_path = my_cdm;
 
+-- Ensure person_id auto-increments via sequence
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'my_cdm' AND c.relname = 'person_person_id_seq' AND c.relkind = 'S'
+  ) THEN
+    CREATE SEQUENCE my_cdm.person_person_id_seq;
+  END IF;
+END$$;
+
+ALTER SEQUENCE my_cdm.person_person_id_seq OWNED BY my_cdm.person.person_id;
+ALTER TABLE my_cdm.person ALTER COLUMN person_id SET DEFAULT nextval('my_cdm.person_person_id_seq');
+
+-- Safe initialize sequence to max(person_id) or 1
+SELECT setval('my_cdm.person_person_id_seq', COALESCE((SELECT MAX(person_id) FROM my_cdm.person), 1),
+        (SELECT MAX(person_id) IS NOT NULL FROM my_cdm.person));
+
 CREATE TABLE concept_recommended
 (
     concept_id_1 bigint,
     concept_id_2 bigint,
     relationship_id character varying(20)
-)
+);
 
 
 set datestyle to 'ymd';
@@ -463,6 +479,9 @@ CREATE INDEX idx_drug_strength_id_2 ON drug_strength (ingredient_concept_id ASC)
 
 --CREATE CLUSTERED INDEX idx_episode_event_id_1 ON episode_event (episode_id ASC);
 --CREATE INDEX idx_ee_field_concept_id_1 ON episode_event (event_field_concept_id ASC);
+
+-- Temporarily relax constraint checks during FK creation
+SET session_replication_role = replica;
 
 ALTER TABLE PERSON ADD CONSTRAINT fpk_PERSON_gender_concept_id FOREIGN KEY (gender_concept_id) REFERENCES CONCEPT (CONCEPT_ID);
 
@@ -815,3 +834,6 @@ ALTER TABLE DRUG_STRENGTH ADD CONSTRAINT fpk_DRUG_STRENGTH_denominator_unit_conc
 ALTER TABLE COHORT_DEFINITION ADD CONSTRAINT fpk_COHORT_DEFINITION_definition_type_concept_id FOREIGN KEY (definition_type_concept_id) REFERENCES CONCEPT (CONCEPT_ID);
 
 ALTER TABLE COHORT_DEFINITION ADD CONSTRAINT fpk_COHORT_DEFINITION_subject_concept_id FOREIGN KEY (subject_concept_id) REFERENCES CONCEPT (CONCEPT_ID);
+
+-- Restore normal constraint checks
+SET session_replication_role = origin;
