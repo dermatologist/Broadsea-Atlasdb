@@ -84,8 +84,8 @@ COPY ./070_create_webapi_schema_postgresql.sql /docker-entrypoint-initdb.d/070_c
 # # 150 - delete batch initialization tables
 # COPY ./150_delete_batch_initialization_tables.sql /docker-entrypoint-initdb.d/150_delete_batch_initialization_tables.sql
 
-# 200-my cdm
-
+# 200-my cdm. #priority 11
+COPY ./vendor/cdm/200_omop_cdm_postgres_ddl.sql /docker-entrypoint-initdb.d/011_omop_cdm_postgresql_ddl.sql
 COPY ./200_mycdm.sql /docker-entrypoint-initdb.d/200_mycdm.sql
 
 RUN ["sed", "-i", "s/exec \"$@\"/echo \"skipping...\"/", "/usr/local/bin/docker-entrypoint.sh"]
