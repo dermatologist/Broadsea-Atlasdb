@@ -81,8 +81,8 @@ COPY ./070_create_webapi_schema_postgresql.sql /docker-entrypoint-initdb.d/070_c
 # # 140 - load demo Atlas concept set definitions
 # COPY ./140_load_demo_atlas_conceptset_definitions.sql /docker-entrypoint-initdb.d/140_load_sample_atlas_conceptset_definitions.sql
 
-# # 150 - delete batch initialization tables
-# COPY ./150_delete_batch_initialization_tables.sql /docker-entrypoint-initdb.d/150_delete_batch_initialization_tables.sql
+# # 150 - create my_cdm schema and add to path
+COPY ./150_create_schema_path.sql /docker-entrypoint-initdb.d/150_create_schema_path.sql
 
 RUN ["sed", "-i", "s/exec \"$@\"/echo \"skipping...\"/", "/usr/local/bin/docker-entrypoint.sh"]
 
